@@ -21,6 +21,18 @@ function bufferToStream(buffer: Buffer): Readable {
   return stream;
 }
 
+// Helper function to decide resource_type based on file mime/type
+interface FileWithType {
+  type: string;
+}
+
+function getResourceType(file: FileWithType): 'image' | 'video' | 'raw' {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'video'; // audio uploads are 'video' type in Cloudinary
+  return 'raw'; // everything else (pdf, doc, zip etc)
+}
+
 export const actions = {
   photoUpload: async ({ request }) => {
     try {
@@ -38,10 +50,11 @@ export const actions = {
 
       const uploadResult: UploadApiResponse = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.v2.uploader.upload_stream(
-          { folder: 'svelte-uploads' },
+          { folder: 'svelte-uploads', resource_type: getResourceType(file) },
           (error, result) => {
             if (error) reject(error);
-            else resolve(result as UploadApiResponse);
+            else if (result) resolve(result);
+            else reject(new Error('Upload failed: No result returned'));
           }
         );
         stream.pipe(uploadStream);

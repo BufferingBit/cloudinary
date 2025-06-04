@@ -70,7 +70,7 @@
 		};
 	}}
 >
-	<input bind:this={fileInput} type="file" name="user_photo" accept="image/*" required />
+	<input bind:this={fileInput} type="file" name="user_photo" required />
 	<input type="submit" value="Upload Photo" onclick={onButtonClick}/>
 </form>
 
